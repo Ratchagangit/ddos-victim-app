@@ -33,6 +33,7 @@ CORS(app)
 # ── HTTP-level traffic tracker ─────────────────────────────────────────
 _buf_lock = threading.Lock()
 _req_buf: list = []
+_last_attack_time: float = 0.0
 
 # ── Protection flag ────────────────────────────────────────────────────
 _prot_lock        = threading.Lock()
@@ -63,10 +64,17 @@ def _track() -> None:
 
     now = time.time()
 
-    # Check for SYN simulation flag
+    global _last_attack_time
+
+    # Check for SYN simulation or attack flags
     is_syn = bool(
         request.headers.get("X-Syn-Simulation") == "1"
         or request.headers.get("X-Attack-Type") in ("syn-flood", "slowloris", "conn-reset")
+    )
+    is_attack_header = bool(
+        request.headers.get("X-Attack-Type")
+        or request.headers.get("X-Attack-Weight")
+        or request.headers.get("X-Syn-Simulation")
     )
 
     payload_len = request.content_length or 0
@@ -82,6 +90,8 @@ def _track() -> None:
                 "b":   approx_bytes,
                 "syn": is_syn,
             })
+        if is_attack_header or len(_req_buf) >= 10:
+            _last_attack_time = now
 
     # ── Enforcement: Check active mitigations if protection is enabled ──
     with _prot_lock:
@@ -130,7 +140,10 @@ def is_under_attack() -> bool:
     """Check if the app is currently overwhelmed by high traffic."""
     with _buf_lock:
         _prune(6.0)
-        return len(_req_buf) >= 15
+        now = time.time()
+        if (now - _last_attack_time) < 5.0:
+            return True
+        return len(_req_buf) >= 10
 
 
 @app.after_request
@@ -201,7 +214,7 @@ def metrics():
     with _buf_lock:
         _prune(window * 2)
         recent = [r for r in _req_buf if now - r["t"] <= window]
-        _req_buf.clear()
+        # Rolling window is maintained by _prune; do not wipe out buffer
 
     ips       = Counter(r["ip"] for r in recent)
     top_ip    = ips.most_common(1)[0][0] if ips else None
@@ -231,19 +244,25 @@ def health():
     })
 
 
-@app.route("/set-protection", methods=["POST"])
+@app.route("/set-protection", methods=["GET", "POST"])
 def set_protection():
     """
     Called by the monitoring API when the dashboard protection switch changes.
-    Body: { "enabled": true | false }
+    Body: { "enabled": true | false } or GET query: ?enabled=false
     """
     global _protection_on
+    enabled = True
     try:
-        import json as _json
-        body    = _json.loads(request.data or b"{}")
-        enabled = bool(body.get("enabled", True))
+        if request.is_json or request.data:
+            body = request.get_json(force=True, silent=True) or {}
+            if "enabled" in body:
+                enabled = bool(body["enabled"])
+        if "enabled" in request.args:
+            enabled = request.args.get("enabled", "true").lower() in ("true", "1")
+        if request.form and "enabled" in request.form:
+            enabled = request.form.get("enabled", "true").lower() in ("true", "1")
     except Exception:
-        enabled = True
+        pass
 
     with _prot_lock:
         _protection_on = enabled
