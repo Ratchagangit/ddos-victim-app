@@ -71,15 +71,17 @@ def _track() -> None:
 
     payload_len = request.content_length or 0
     approx_bytes = 200 + len(request.path) + payload_len
+    weight = min(int(request.headers.get("X-Attack-Weight", 1)), 25)
 
     with _buf_lock:
         _prune(6.0)
-        _req_buf.append({
-            "t":   now,
-            "ip":  src_ip,
-            "b":   approx_bytes,
-            "syn": is_syn,
-        })
+        for _ in range(weight):
+            _req_buf.append({
+                "t":   now,
+                "ip":  src_ip,
+                "b":   approx_bytes,
+                "syn": is_syn,
+            })
 
     # ── Enforcement: Check active mitigations if protection is enabled ──
     with _prot_lock:
@@ -139,7 +141,7 @@ def index():
     with _prot_lock:
         protected = _protection_on
 
-    if not protected and is_under_attack():
+    if not protected:
         return "<h1>503 Service Unavailable</h1><p>Server overwhelmed by attack. Protection is offline.</p>", 503
 
     return render_template("index.html")
@@ -155,7 +157,7 @@ def api_data():
     with _prot_lock:
         protected = _protection_on
 
-    if not protected and is_under_attack():
+    if not protected:
         return jsonify({
             "status":  "error",
             "message": "503 Service Unavailable — server overwhelmed by attack",
