@@ -130,12 +130,12 @@ def is_under_attack() -> bool:
     """Check if the app is currently overwhelmed by high traffic."""
     with _buf_lock:
         _prune(6.0)
-        return len(_req_buf) > 50
+        return len(_req_buf) >= 15
 
 
 @app.after_request
 def add_no_cache(response):
-    """Prevent browsers from caching old HTML so 503 shows immediately."""
+    """Prevent browsers from caching old HTML so status updates show immediately."""
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -150,7 +150,8 @@ def index():
     with _prot_lock:
         protected = _protection_on
 
-    if not protected:
+    # Goes down ONLY when protection is OFF AND server is actively under attack!
+    if not protected and is_under_attack():
         return render_template("503.html"), 503
 
     return render_template("index.html")
@@ -161,12 +162,12 @@ def api_data():
     """
     Data API endpoint that simulates real processing work.
     This is the target endpoint for the DDoS attack simulation.
-    When protection is OFF → returns 503 to simulate the app going down.
+    Goes down ONLY when protection is OFF AND server is actively under attack!
     """
     with _prot_lock:
         protected = _protection_on
 
-    if not protected:
+    if not protected and is_under_attack():
         return jsonify({
             "status":  "error",
             "message": "503 Service Unavailable — server overwhelmed by attack",
