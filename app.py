@@ -152,7 +152,7 @@ def index():
 
     # Goes down ONLY when protection is OFF AND server is actively under attack!
     if not protected and is_under_attack():
-        return render_template("503.html"), 503
+        return "503 Service Unavailable", 503, {"Content-Type": "text/plain"}
 
     return render_template("index.html")
 
@@ -168,11 +168,7 @@ def api_data():
         protected = _protection_on
 
     if not protected and is_under_attack():
-        return jsonify({
-            "status":  "error",
-            "message": "503 Service Unavailable — server overwhelmed by attack",
-            "code":    503,
-        }), 503
+        return "503 Service Unavailable", 503, {"Content-Type": "text/plain"}
 
     # Fast response during benchmark/stress test
     delay = random.uniform(0.005, 0.02)
