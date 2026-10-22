@@ -133,6 +133,15 @@ def is_under_attack() -> bool:
         return len(_req_buf) > 50
 
 
+@app.after_request
+def add_no_cache(response):
+    """Prevent browsers from caching old HTML so 503 shows immediately."""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 # ── Routes ─────────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -142,7 +151,7 @@ def index():
         protected = _protection_on
 
     if not protected:
-        return "<h1>503 Service Unavailable</h1><p>Server overwhelmed by attack. Protection is offline.</p>", 503
+        return render_template("503.html"), 503
 
     return render_template("index.html")
 

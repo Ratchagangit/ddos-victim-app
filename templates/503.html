@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>503 Service Unavailable — Victim Server Down</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #090d16;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #dc2626;
+      box-shadow: 0 0 50px rgba(220, 38, 38, 0.25);
+      border-radius: 16px;
+      max-width: 540px;
+      width: 100%;
+      padding: 48px 36px;
+      text-align: center;
+    }
+    .pulse-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+      background: rgba(220, 38, 38, 0.15);
+      border: 2px solid #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .badge {
+      display: inline-block;
+      background: #450a0a;
+      color: #fca5a5;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      border: 1px solid #b91c1c;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #f87171;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .status-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      color: #cbd5e1;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .status-row:last-child { margin-bottom: 0; }
+    .status-label { color: #64748b; }
+    .status-val--red { color: #f87171; font-weight: 600; }
+    .status-val--yellow { color: #fbbf24; }
+    .help-text {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .help-text strong {
+      color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="pulse-icon">⚡</div>
+    <div class="badge">DDoS Mitigation Inactive</div>
+    <h1>503 Service Unavailable</h1>
+    <p>This server has been overwhelmed and knocked offline because active DDoS protection is currently disabled.</p>
+
+    <div class="status-box">
+      <div class="status-row">
+        <span class="status-label">Server Status:</span>
+        <span class="status-val--red">CRASHED / DOWN (503)</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Victim Protection:</span>
+        <span class="status-val--yellow">DISABLED (OFF)</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Target Service:</span>
+        <span>TechDaily News Production</span>
+      </div>
+    </div>
+
+    <div class="help-text">
+      To restore service, toggle <strong>Protect Victim: ON</strong> in your Security Dashboard.
+    </div>
+  </div>
+</body>
+</html>
