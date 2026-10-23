@@ -79,7 +79,7 @@ def _track() -> None:
 
     payload_len = request.content_length or 0
     approx_bytes = 200 + len(request.path) + payload_len
-    weight = min(int(request.headers.get("X-Attack-Weight", 1)), 25)
+    weight = min(int(request.headers.get("X-Attack-Weight", 1)), 100)
 
     with _buf_lock:
         _prune(6.0)
